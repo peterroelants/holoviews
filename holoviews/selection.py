@@ -77,7 +77,12 @@ class _base_link_selections(param.ParameterizedFunction):
 
     @bothmethod
     def instance(self_or_cls, **params):
+        print(f"\n_base_link_selections.instance")
+        print(f"\tself_or_cls: {self_or_cls!r}")
+        print(f"\tself_or_cls.param.get_param_values(): {self_or_cls.param.get_param_values()!r}")
+        print(f"\tparams: {params!r}")
         inst = super().instance(**params)
+        print(f"\tinst: {inst!r}")
 
         # Init private properties
         inst._cross_filter_stream = CrossFilterSet(mode=inst.cross_filter_mode)
@@ -179,6 +184,10 @@ class _base_link_selections(param.ParameterizedFunction):
                     callback.operation)
             else:
                 # This is a DynamicMap that we don't know how to recurse into.
+                self.param.warning(
+                    "linked selection: Encountered DynamicMap that we don't know "
+                    "how to recurse into:\n{!s}".format(hvobj)
+                )
                 return hvobj
         elif isinstance(hvobj, Element):
             # Register hvobj to receive selection expression callbacks
@@ -276,6 +285,9 @@ class link_selections(_base_link_selections):
 
     @bothmethod
     def instance(self_or_cls, **params):
+        print(f"\nlink_selections.instance")
+        print(f"\tself_or_cls: {self_or_cls!r}")
+        print(f"\tparams: {params!r}")
         inst = super().instance(**params)
 
         # Initialize private properties
@@ -411,11 +423,14 @@ class link_selections(_base_link_selections):
 
     @classmethod
     def _build_selection_streams(cls, inst):
+        print(f"\nlink_selections._build_selection_streams")
+        print(f"\tinst: {inst!r}")
         # Colors stream
         style_stream = _Styles(
             colors=[inst.unselected_color, inst.selected_color],
             alpha=inst.unselected_alpha
         )
+        print(f"\tstyle_stream: {style_stream!r}")
 
         # Cmap streams
         cmap_streams = [
@@ -538,6 +553,7 @@ class OverlaySelectionDisplay(SelectionDisplay):
     """
 
     def __init__(self, color_prop='color', is_cmap=False, supports_region=True):
+        print(f"\nOverlaySelectionDisplay.__init__")
         if not isinstance(color_prop, (list, tuple)):
             self.color_props = [color_prop]
         else:
@@ -550,6 +566,10 @@ class OverlaySelectionDisplay(SelectionDisplay):
                 for color_prop in self.color_props}
 
     def build_selection(self, selection_streams, hvobj, operations, region_stream=None, cache=None):
+        print(f"\nOverlaySelectionDisplay.build_selection")
+        print(f"\tself: {self!r}")
+        print(f"\tselection_streams: {selection_streams!r}")
+        print(f"\thvobj: {hvobj!r}")
         from .element import Histogram
 
         num_layers = len(selection_streams.style_stream.colors)
@@ -571,6 +591,7 @@ class OverlaySelectionDisplay(SelectionDisplay):
             layer = layers[layer_number]
             cmap_stream = selection_streams.cmap_streams[layer_number]
             streams = [selection_streams.style_stream, cmap_stream]
+            print(f"\t_apply_style_callback on layer {layer_number}")
             layer = layer.apply(
                 self._apply_style_callback, layer_number=layer_number,
                 streams=streams, per_element=True
@@ -615,14 +636,27 @@ class OverlaySelectionDisplay(SelectionDisplay):
             return pipeline(selection)
 
     def _apply_style_callback(self, element, layer_number, colors, cmap, alpha, **kwargs):
+        print(f"\nOverlaySelectionDisplay._apply_style_callback.OverlaySelectionDisplay")
+        print(f"\tself: {self!r}")
+        print(f"\telement: {element!r}")
+        print(f"\telement.param.get_param_values(): {element.param.get_param_values()!r}")
+        print(f"\tlayer_number: {layer_number!r}")
+        print(f"\tcolors: {colors!r}")
+        print(f"\tcmap: {cmap!r}")
+        print(f"\talpha: {alpha!r}")
+        print(f"\tkwargs: {kwargs!r}")
         opts = {}
         if layer_number == 0:
             opts['colorbar'] = False
         else:
+            print(f"\tsetting | alpha = 1")
             alpha = 1
+            import pdb
+            pdb.set_trace()
         if cmap is not None:
             opts['cmap'] = cmap
         color = colors[layer_number] if colors else None
+        print(f"\tcalling _build_element_layer")
         return self._build_element_layer(element, color, alpha, **opts)
 
     def _build_element_layer(self, element, layer_color, layer_alpha, selection_expr=True):

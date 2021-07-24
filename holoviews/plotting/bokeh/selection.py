@@ -28,6 +28,12 @@ class BokehOverlaySelectionDisplay(OverlaySelectionDisplay):
     """
 
     def _build_element_layer(self, element, layer_color, layer_alpha, **opts):
+        print(f"\nBokehOverlaySelectionDisplay._build_element_layer")
+        print(f"\tself: {self!r}")
+        print(f"\telement: {element!r}")
+        print(f"\tlayer_color: {layer_color!r}")
+        print(f"\tlayer_alpha: {layer_alpha!r}")
+        print(f"\topts: {opts!r}")
         backend_options = Store.options(backend='bokeh')
         el_name = type(element).name
         style_options = backend_options[(el_name,)]['style']
